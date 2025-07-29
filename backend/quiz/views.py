@@ -44,7 +44,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             except User.DoesNotExist:
                 return Response({'error': '18'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': '21'}, status=status.HTTP_200_OK)
+            try:
+                user = User.objects.get(email=request.data.get('email'))
+            except User.DoesNotExist:
+                return Response({'error': '18'}, status=status.HTTP_200_OK)
         return super().post(request, *args, **kwargs)
 
 class TerminalView(ListCreateAPIView):
