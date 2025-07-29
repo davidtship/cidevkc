@@ -122,7 +122,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+CORS_ALLOWED_ORIGINS = [
+    "https://cidevkc-09c92764069d.herokuapp.com",
+    "http://localhost:5173",  # pour développement local
+]
 
 
 # Default primary key field type
@@ -132,7 +135,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ###3
 
 AUTH_USER_MODEL ='quiz.User'
-CORS_ALLOW_ALL_ORIGINS =True
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
