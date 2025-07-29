@@ -12,7 +12,7 @@ djoser = "*"
 getmac = "*"
 drf-extra-fields = "*"
 pillow = "*"
-psycopg2-binary = "*"
+psycopg2 = "*"
 gunicorn = "*"
 
 [dev-packages]
