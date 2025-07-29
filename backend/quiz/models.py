@@ -8,7 +8,6 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     adresse = models.CharField(max_length=255,blank=True)
     email = models.EmailField(unique=True,blank=True)
-    image = models.ImageField(upload_to='media/', blank=True)
     type_user = models.CharField(max_length=100, choices=TYPE_USER_CHOICES)
     
     USERNAME_FIELD = 'email'
