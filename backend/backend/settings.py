@@ -129,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+###3
 
 AUTH_USER_MODEL ='quiz.User'
 CORS_ALLOW_ALL_ORIGINS =True

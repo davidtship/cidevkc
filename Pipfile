@@ -14,7 +14,6 @@ drf-extra-fields = "*"
 pillow = "*"
 gunicorn = "*"
 psycopg2-binary = "*"
-
 [dev-packages]
 
 [requires]
