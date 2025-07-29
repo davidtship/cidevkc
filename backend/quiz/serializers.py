@@ -20,25 +20,24 @@ class UserCreateSerializer(BaseUserCreateSerializer):
     #image = Base64ImageField(required=False)
     class Meta(BaseUserCreateSerializer.Meta):
         
-        fields = ['id', 'password', 'first_name','username', 'last_name',
+        fields = ['id', 'password', 'first_name', 'last_name',
                   'email','type_user']
 
     # you can grab the created user and do something with them here
     def create(self, validated_data):
-
         user = super().create(validated_data)
 
         return user
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
-        fields = ['id', 'first_name','username',
+        fields = ['id', 'first_name',
                   'last_name', 'email','type_user','date_joined'
                  
                   ]
     def validate(self, attrs):
         validated_attr = super().validate(attrs)
-        username = validated_attr.get('username')
-        user = user.objects.get(username=username)
+        email = validated_attr.get('username')
+        user = user.objects.get(email=email)
         return validated_attr
 
 
@@ -52,8 +51,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'id': obj.id, 
             'first_name': obj.first_name,
             'last_name': obj.last_name, 
-            'email': obj.email,
-            'username': obj.username
+            'email': obj.email
           
         })
 
