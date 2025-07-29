@@ -33,23 +33,22 @@ from .models import (Terminal,
 import uuid
 User = get_user_model()
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        mac = gma()
-        term = Terminal.objects.filter(adresse = str(mac))
-        if term.exists():
-            pass
-            try:
-                user = User.objects.get(email=request.data.get('email'),password = request.data.get('password'))
-            except User.DoesNotExist:
-                return Response({'error': '18'}, status=status.HTTP_200_OK)
-        else:
-            try:
-                user = User.objects.get(email=request.data.get('email'),password = request.data.get('password'))
-            except User.DoesNotExist:
-                return Response({'error': '18'}, status=status.HTTP_200_OK)
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': '18'}, status=status.HTTP_200_OK)  # utilisateur non trouvé
+
+        if not user.check_password(password):
+            return Response({'error': '19'}, status=status.HTTP_200_OK)  # mot de passe invalide
+
         return super().post(request, *args, **kwargs)
     
 @method_decorator(cache_page(10 * 1), name='dispatch')
