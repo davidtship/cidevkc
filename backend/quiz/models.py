@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    type_user = models.CharField(max_length=100, choices=TYPE_USER_CHOICES)
+    type_user = models.CharField(max_length=100)
 
     username = models.CharField(max_length=150, blank=True)  # facultatif ou supprimé
     USERNAME_FIELD = 'email'
@@ -34,7 +34,7 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return self.emailcl
     
 
 class BaseModel(models.Model):

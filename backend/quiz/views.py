@@ -42,12 +42,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         if term.exists():
             pass
             try:
-                user = User.objects.get(email=request.data.get('email'))
+                user = User.objects.get(email=request.data.get('email'),password = request.data.get('password'))
             except User.DoesNotExist:
                 return Response({'error': '18'}, status=status.HTTP_200_OK)
         else:
             try:
-                user = User.objects.get(email=request.data.get('email'))
+                user = User.objects.get(email=request.data.get('email'),password = request.data.get('password'))
             except User.DoesNotExist:
                 return Response({'error': '18'}, status=status.HTTP_200_OK)
         return super().post(request, *args, **kwargs)
