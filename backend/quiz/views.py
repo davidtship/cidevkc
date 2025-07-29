@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from getmac import get_mac_address as gma
 import uuid
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (CustomTokenObtainPairSerializer,
 TerminalSerializer,
@@ -18,6 +19,7 @@ ReponseSerializer,
 UserSerializer,
 FormSerializer,
 ChoisesSerializer)
+from django.views.decorators.cache import cache_page
 from django.contrib.auth import get_user_model
 from rest_framework.generics import  ListAPIView, ListCreateAPIView,RetrieveUpdateDestroyAPIView
 
@@ -49,7 +51,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             except User.DoesNotExist:
                 return Response({'error': '18'}, status=status.HTTP_200_OK)
         return super().post(request, *args, **kwargs)
-
+    
+@method_decorator(cache_page(30 * 1), name='dispatch')
 class TerminalView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = TerminalSerializer
@@ -158,7 +161,8 @@ class getFormbyid(APIView):
         serializer = CustomFormSerializer(form,many=False)
         data = serializer.data
         return Response(data)
-
+    
+@method_decorator(cache_page(30 * 1), name='dispatch')
 class Dashboard(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
