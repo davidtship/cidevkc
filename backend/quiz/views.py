@@ -52,32 +52,32 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 return Response({'error': '18'}, status=status.HTTP_200_OK)
         return super().post(request, *args, **kwargs)
     
-@method_decorator(cache_page(30 * 1), name='dispatch')
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class TerminalView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = TerminalSerializer
     queryset = Terminal.objects.all() 
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class QuestionView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = QuestionSerializer
     queryset = Question.objects.all() 
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class CategorieView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = CategorieSerializer
     queryset = Categorie.objects.all() 
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class FormView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = CustomFormSerializer
     queryset = Form.objects.all() 
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class ChoicesView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ChoisesSerializer
     queryset = Choices.objects.all() 
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class CustomCategorieView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = CustomCategorieSerializer
@@ -96,7 +96,7 @@ class getMac_adress(APIView):
         else:
             message="Ce terminal n'existe pas"
         return Response({"message":message})
-    
+@method_decorator(cache_page(10 * 1), name='dispatch') 
 class CustomCreateCategorieView(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
@@ -153,7 +153,7 @@ class changestatus(APIView):
         serializer = CustomFormSerializer(form,many=False)
         data = serializer.data
         return Response(data)
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class getFormbyid(APIView):
     permission_classes = (AllowAny,)
     def get(self, request,pk):
@@ -162,7 +162,7 @@ class getFormbyid(APIView):
         data = serializer.data
         return Response(data)
     
-@method_decorator(cache_page(30 * 1), name='dispatch')
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class Dashboard(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
@@ -219,7 +219,7 @@ class SaveForm(APIView):
         form_id = request.data["form"]
         saveform = ReponseUser.objects.create(form_id = form_id,user = user)
         return Response({"message":"Save done!"})
-
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class Return_reponses_form(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
@@ -227,7 +227,9 @@ class Return_reponses_form(APIView):
         serializer = ReponseUserSerializer(rep,context={'request': request},many=True)
         data = serializer.data
         return Response(data)
-       
+    
+
+@method_decorator(cache_page(10 * 1), name='dispatch')      
 class Return_reponses(APIView):
     permission_classes = (AllowAny,)
     def get(self, request,u):
@@ -235,7 +237,7 @@ class Return_reponses(APIView):
         serializer = ReponseSerializer(rep,many=True)
         data = serializer.data
         return Response(data)
-    
+@method_decorator(cache_page(10 * 1), name='dispatch')   
 class Return_reponses_formbyid(APIView):
     permission_classes = (AllowAny,)
     def get(self, request,f):
@@ -243,7 +245,8 @@ class Return_reponses_formbyid(APIView):
         serializer = ReponseUserSerializer(rep,context={'request': request},many=True)
         data = serializer.data
         return Response(data)
-
+    
+@method_decorator(cache_page(10 * 1), name='dispatch')
 class ListeUsers(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
