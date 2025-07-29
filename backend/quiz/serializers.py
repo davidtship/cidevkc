@@ -21,7 +21,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
         
         fields = ['id', 'password', 'first_name','username', 'last_name',
-                  'email','image','type_user']
+                  'email','type_user']
 
     # you can grab the created user and do something with them here
     def create(self, validated_data):
@@ -53,8 +53,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'first_name': obj.first_name,
             'last_name': obj.last_name, 
             'email': obj.email,
-            'username': obj.username,
-            'image':"http://localhost:8000/"+str(obj.image),
+            'username': obj.username
           
         })
 
