@@ -6,7 +6,6 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    adresse = models.CharField(max_length=255,blank=True)
     email = models.EmailField(unique=True,blank=True)
     type_user = models.CharField(max_length=100, choices=TYPE_USER_CHOICES)
     
