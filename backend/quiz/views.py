@@ -22,7 +22,7 @@ ChoisesSerializer)
 from django.views.decorators.cache import cache_page
 from django.contrib.auth import get_user_model
 from rest_framework.generics import  ListAPIView, ListCreateAPIView,RetrieveUpdateDestroyAPIView
-
+from rest_framework.decorators import api_view
 from .models import (Terminal,
                      Question,
                      Categorie,
@@ -302,3 +302,9 @@ class RegisterTerminalView(APIView):
                 "detail": "Terminal enregistré." if created else "Terminal mis à jour."
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def check_device(request):
+    fingerprint = request.GET.get('fingerprint')
+    allowed = Terminal.objects.filter(fingerprint=fingerprint).exists()
+    return Response({'allowed': allowed})

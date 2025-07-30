@@ -22,5 +22,6 @@ urlpatterns = [
      path("listeusers", views.ListeUsers.as_view()),
      path('check-device/', views.check_or_register_device),
      path('save-device/', views.RegisterTerminalView.as_view(), name='save-device'),
+     path('check_device/', views.check_device, name='check_device'),
 
 ]
