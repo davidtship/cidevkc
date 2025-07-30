@@ -3,7 +3,7 @@ from .choices import QUESTION_CHOICES,TYPE_USER_CHOICES
 from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
-
+import uuid
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -93,4 +93,12 @@ class ReponseUser(BaseModel):
     form = models.ForeignKey(Form, on_delete=models.DO_NOTHING, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    
+
+class AuthorizedDevice(models.Model):
+    device_id = models.CharField(max_length=255, unique=True)  # FingerprintJS ID
+    device_uuid = models.UUIDField(default=uuid.uuid4, unique=True)  # Ton UUID sécurisé
+    label = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.label or self.device_id}"

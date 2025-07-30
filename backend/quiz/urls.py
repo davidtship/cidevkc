@@ -20,5 +20,6 @@ urlpatterns = [
      path("returndataformuser", views.Return_reponses_form.as_view()),
      path("returndataformuser/<f>", views.Return_reponses_formbyid.as_view()),
      path("listeusers", views.ListeUsers.as_view()),
+     path('api/check-device/', views.check_or_register_device),
 
 ]

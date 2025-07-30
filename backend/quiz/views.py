@@ -30,6 +30,11 @@ from .models import (Terminal,
                      Choices,
                      Reponse,
                      ReponseUser)
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import AuthorizedDevice
+import json
 import uuid
 User = get_user_model()
 
@@ -253,3 +258,31 @@ class ListeUsers(APIView):
         serializer = UserSerializer(users,many=True)
         data = serializer.data
         return Response(data)
+
+
+@csrf_exempt
+def check_or_register_device(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            fingerprint = data.get('device_id')
+            uuid_client = data.get('device_uuid')
+
+            if not fingerprint:
+                return JsonResponse({'allowed': False, 'reason': 'Missing fingerprint'}, status=400)
+
+            device = AuthorizedDevice.objects.filter(device_id=fingerprint).first()
+
+            if device:
+                if str(device.device_uuid) == uuid_client:
+                    return JsonResponse({'allowed': True})
+                else:
+                    return JsonResponse({'allowed': False, 'reason': 'UUID mismatch'})
+            else:
+                # Autoriser l’enregistrement automatique d’un nouveau device (option à sécuriser)
+                new_uuid = str(uuid.uuid4())
+                AuthorizedDevice.objects.create(device_id=fingerprint, device_uuid=new_uuid)
+                return JsonResponse({'allowed': True, 'new_uuid': new_uuid})
+
+        except Exception as e:
+            return JsonResponse({'allowed': False, 'reason': str(e)}, status=500)
