@@ -33,7 +33,6 @@ from .models import (Terminal,
 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from .models import AuthorizedDevice
 import json
 import uuid
 User = get_user_model()
