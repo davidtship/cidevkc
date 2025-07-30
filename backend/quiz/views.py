@@ -286,3 +286,20 @@ def check_or_register_device(request):
 
         except Exception as e:
             return JsonResponse({'allowed': False, 'reason': str(e)}, status=500)
+        
+class RegisterTerminalView(APIView):
+    def post(self, request):
+        serializer = TerminalSerializer(data=request.data)
+        if serializer.is_valid():
+            device_uuid = serializer.validated_data['device_uuid']
+            terminal, created = Terminal.objects.update_or_create(
+                device_uuid=device_uuid,
+                defaults={
+                    'fingerprint': serializer.validated_data['fingerprint'],
+                    'device_name': serializer.validated_data['device_name'],
+                }
+            )
+            return Response({
+                "detail": "Terminal enregistré." if created else "Terminal mis à jour."
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -42,10 +42,15 @@ class BaseModel(models.Model):
     created_at = models.DateField(auto_now=True)
     class Meta:
         abstract = True
-class Terminal(BaseModel):
-    model = models.CharField(max_length=255,blank=True)
-    adresse = models.CharField(max_length=255,blank=True)
+class Terminal(models.Model):
+    device_uuid = models.CharField(max_length=255, unique=True)
+    fingerprint = models.CharField(max_length=255)
+    device_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.device_name
+    
 class Choices(BaseModel):
     option = models.CharField(max_length=100)
     code_uid = models.CharField(max_length=100,blank=True)
@@ -94,11 +99,3 @@ class ReponseUser(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
-class AuthorizedDevice(models.Model):
-    device_id = models.CharField(max_length=255, unique=True)  # FingerprintJS ID
-    device_uuid = models.UUIDField(default=uuid.uuid4, unique=True)  # Ton UUID sécurisé
-    label = models.CharField(max_length=100, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.label or self.device_id}"

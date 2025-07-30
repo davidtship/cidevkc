@@ -21,5 +21,6 @@ urlpatterns = [
      path("returndataformuser/<f>", views.Return_reponses_formbyid.as_view()),
      path("listeusers", views.ListeUsers.as_view()),
      path('check-device/', views.check_or_register_device),
+     path('api/save-device/', views.RegisterTerminalView.as_view(), name='save-device'),
 
 ]
