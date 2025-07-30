@@ -305,6 +305,7 @@ class RegisterTerminalView(APIView):
 
 @api_view(['GET'])
 def check_device(request):
+    permission_classes = (AllowAny,)
     fingerprint = request.GET.get('fingerprint')
     allowed = Terminal.objects.filter(fingerprint=fingerprint).exists()
     return Response({'allowed': allowed})
