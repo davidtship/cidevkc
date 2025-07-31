@@ -98,9 +98,22 @@ def check_device(request):
 
 
 class FormulaireCreateAPIView(generics.CreateAPIView):
-    permission_classes = (AllowAny,)
+    permission_classes = [AllowAny]
     queryset = Formulaire.objects.all()
     serializer_class = FormulaireWriteSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        # Ajoute automatiquement l'utilisateur connecté s'il n'est pas dans les données
+        if not request.data.get('user') and request.user.is_authenticated:
+            request.data._mutable = True  # nécessaire si c’est un QueryDict
+            request.data['user'] = request.user.id
+            request.data._mutable = False
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @method_decorator(cache_page(10 * 1), name='dispatch')
 class FormulaireListAPIView(generics.ListAPIView):

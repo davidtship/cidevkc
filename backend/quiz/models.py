@@ -1,10 +1,8 @@
 from django.db import models
-from .choices import QUESTION_CHOICES,TYPE_USER_CHOICES
 from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
-import uuid
-from django.contrib.auth import get_user_model
+
 
 
 

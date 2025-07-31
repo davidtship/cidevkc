@@ -14,7 +14,6 @@ from .models import (Terminal,
                      ReponseQuestion
 )
 
-user = get_user_model()
 
 
 
@@ -70,12 +69,68 @@ class OptionSerializer(serializers.ModelSerializer):
         fields = ['id', 'texte']
 
 class QuestionSerializer(serializers.ModelSerializer):
-    options = OptionSerializer(many=True)
+    options = OptionSerializer(many=True, required=False)
 
     class Meta:
         model = Question
         fields = ['id', 'texte', 'type', 'options']
 
+    def create(self, validated_data):
+        options_data = validated_data.pop('options', [])
+        question = Question.objects.create(**validated_data)
+        for option_data in options_data:
+            Option.objects.create(question=question, **option_data)
+        return question
+
+class RecursiveSectionSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, required=False)
+    sous_sections = serializers.ListSerializer(child=serializers.SerializerMethodField(), required=False)
+
+    class Meta:
+        model = Section
+        fields = ['id', 'titre', 'questions', 'sous_sections']
+
+    def get_sous_sections(self, obj):
+        children = obj.children.all()
+        return RecursiveSectionSerializer(children, many=True).data
+
+    def create(self, validated_data):
+        questions_data = validated_data.pop('questions', [])
+        sous_sections_data = validated_data.pop('sous_sections', [])
+        parent = self.context.get('parent')
+        formulaire = self.context['formulaire']
+
+        section = Section.objects.create(titre=validated_data['titre'], parent=parent, formulaire=formulaire)
+
+        for question_data in questions_data:
+            options_data = question_data.pop('options', [])
+            question = Question.objects.create(section=section, **question_data)
+            for option_data in options_data:
+                Option.objects.create(question=question, **option_data)
+
+        for sous_section_data in sous_sections_data:
+            serializer = RecursiveSectionSerializer(data=sous_section_data, context={'formulaire': formulaire, 'parent': section})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return section
+class FormulaireWriteSerializer(serializers.ModelSerializer):
+    sections = RecursiveSectionSerializer(many=True)
+
+    class Meta:
+        model = Formulaire
+        fields = ['id', 'titre', 'user', 'sections']
+
+    def create(self, validated_data):
+        sections_data = validated_data.pop('sections', [])
+        formulaire = Formulaire.objects.create(**validated_data)
+
+        for section_data in sections_data:
+            serializer = RecursiveSectionSerializer(data=section_data, context={'formulaire': formulaire, 'parent': None})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return formulaire
 class SectionSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)
     sous_sections = serializers.SerializerMethodField()
@@ -120,38 +175,7 @@ class SectionWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ['titre', 'questions', 'sous_sections']
-
-class FormulaireWriteSerializer(serializers.ModelSerializer):
-    sections = SectionWriteSerializer(many=True)
-    user = serializers.PrimaryKeyRelatedField(queryset=user.objects.all())
-
-    class Meta:
-        model = Formulaire
-        fields = ['titre', 'user', 'sections']
-
-    def create(self, validated_data):
-        sections_data = validated_data.pop('sections', [])
-        formulaire = Formulaire.objects.create(**validated_data)
-
-        def create_section(section_data, formulaire, parent=None):
-            questions_data = section_data.pop('questions', [])
-            sous_sections_data = section_data.pop('sous_sections', [])
-            section = Section.objects.create(formulaire=formulaire, parent=parent, **section_data)
-
-            for question_data in questions_data:
-                options_data = question_data.pop('options', [])
-                question = Question.objects.create(section=section, **question_data)
-                for opt_data in options_data:
-                    Option.objects.create(question=question, **opt_data)
-
-            for sub_section_data in sous_sections_data:
-                create_section(sub_section_data, formulaire, parent=section)
-
-        for section_data in sections_data:
-            create_section(section_data, formulaire)
-
-        return formulaire
-    
+        
 class ReponseQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReponseQuestion
