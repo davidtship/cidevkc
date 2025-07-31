@@ -1,40 +1,28 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from getmac import get_mac_address as gma
-import uuid
+from .models import Formulaire,ReponseFormulaire,ReponseQuestion,Question
 from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import (CustomTokenObtainPairSerializer,
-TerminalSerializer,
-QuestionSerializer,
-CategorieSerializer,
-CustomFormSerializer,
-CustomCategorieSerializer,
-CustomCategorieSerializer,
-ReponseUserSerializer,
-ReponseSerializer,
-UserSerializer,
-FormSerializer,
-ChoisesSerializer)
+from rest_framework.decorators import api_view
+from rest_framework.generics import get_object_or_404
+from django.http import JsonResponse
+from .serializers import (
+    CustomTokenObtainPairSerializer,
+    FormulaireReadSerializer,
+    TerminalSerializer,
+    FormulaireWriteSerializer,
+    ReponseFormulaireDetailSerializer,
+    UserSerializer,)
+
 from django.views.decorators.cache import cache_page
 from django.contrib.auth import get_user_model
-from rest_framework.generics import  ListAPIView, ListCreateAPIView,RetrieveUpdateDestroyAPIView
+from rest_framework.generics import   ListCreateAPIView
 from rest_framework.decorators import api_view
-from .models import (Terminal,
-                     Question,
-                     Categorie,
-                     Form,
-                     Choices,
-                     Reponse,
-                     ReponseUser)
+from .models import (Terminal)
+from rest_framework import generics
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
-import uuid
 User = get_user_model()
 
 
@@ -54,122 +42,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return Response({'error': '19'}, status=status.HTTP_200_OK)  # mot de passe invalide
 
         return super().post(request, *args, **kwargs)
-    
+
 @method_decorator(cache_page(10 * 1), name='dispatch')
 class TerminalView(ListCreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = TerminalSerializer
     queryset = Terminal.objects.all() 
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class QuestionView(ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = QuestionSerializer
-    queryset = Question.objects.all() 
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class CategorieView(ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = CategorieSerializer
-    queryset = Categorie.objects.all() 
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class FormView(ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = CustomFormSerializer
-    queryset = Form.objects.all() 
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class ChoicesView(ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = ChoisesSerializer
-    queryset = Choices.objects.all() 
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class CustomCategorieView(ListCreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = CustomCategorieSerializer
-    queryset = Categorie.objects.all() 
+@method_decorator(cache_page(5 * 1), name='dispatch')
 
-
-class getMac_adress(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request):
-        return Response({"mac":gma()})
-    def post(self, request):
-        mac=request.data["mac"]
-        ad = Terminal.objects.filter(adresse = mac)
-        if ad.exists():
-            message="Ce terminal existe"
-        else:
-            message="Ce terminal n'existe pas"
-        return Response({"message":message})
-@method_decorator(cache_page(10 * 1), name='dispatch') 
-class CustomCreateCategorieView(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request):
-            categories = Categorie.objects.all()
-            serializer = CustomCategorieSerializer(categories , many=True)
-            data = serializer.data
-            return Response(data)
-    def post(self, request):
-        
-        form = request.data["form"]
-        sections = request.data["sections"]
-        cat_form = uuid.uuid1()
-        for section in sections:
-            code_uid = uuid.uuid1()
-            title=section["title"] 
-            questions=section["questions"]
-            for question in questions:
-                if question["type"] =="multiple_choice" or question["type"] =="checkboxes":
-                    for option in question["options"]:
-                        choices = Choices.objects.create(code_uid = code_uid,option = option)
-                    
-                choices = Choices.objects.filter(code_uid = code_uid)
-                questions = Question.objects.create(
-                                                    code_uid = code_uid , 
-                                                    label = question["label"],
-                                                    question_type = question["type"],
-                                                        required = True )
-                questions.choices.set(choices)
-                questions.save()
-            questions = Question.objects.filter(code_uid = code_uid)
-            categories = Categorie.objects.create(cat_form = cat_form,code_uid = code_uid,
-                                                title = title,
-                                                )
-            categories.questions.set(questions)
-            categories.save()
-        cate = Categorie.objects.filter(cat_form = cat_form)
-        formulaire = Form.objects.create(title = form)
-        formulaire.categories.set(cate)
-        formulaire.save()
-        serializer = CustomCategorieSerializer(categories , many=False)
-        data = serializer.data
-        return Response(data)
-    
-class changestatus(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request,pk):
-        form = Form.objects.get(id = pk)
-        if (form.statut):
-            form.statut = False
-            form.save()
-        else:
-            form.statut = True
-            form.save()
-        serializer = CustomFormSerializer(form,many=False)
-        data = serializer.data
-        return Response(data)
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class getFormbyid(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request,pk):
-        form = Form.objects.get(id = pk)
-        serializer = CustomFormSerializer(form,many=False)
-        data = serializer.data
-        return Response(data)
-    
-@method_decorator(cache_page(10 * 1), name='dispatch')
 class Dashboard(APIView):
     permission_classes = (AllowAny,)
     def get(self, request):
-        nombre_formulaire = Form.objects.all().count()
+        nombre_formulaire = Formulaire.objects.all().count()
         nombre_user = User.objects.all().count()
         nombre_terminal = Terminal.objects.all().count()
         data = {
@@ -179,76 +63,6 @@ class Dashboard(APIView):
         }
         return Response(data)
 
-
-
-class SaveRespone(APIView):
-    permission_classes = (AllowAny,)
-    def post(self, request):
-        user = request.user
-        response_courte = request.data["shortAnswers"]
-        checkbox = request.data["checkboxAnswers"]
-        radio = request.data["radioAnswers"]
-        
-        data = {
-        "shortAnswers": [
-        {"id": k, "rep": v} for k, v in response_courte.items()
-         ]
-        ,
-        "checkboxAnswers": [
-        {"id": k, "rep": v} for k, v in checkbox.items()
-         ]
-         ,
-        "radioAnswers": [
-        {"id": k, "rep": v} for k, v in radio.items()
-         ]
-         }
-        
-        for courte_rep in data["shortAnswers"]:
-                 resp = Reponse.objects.create(question_id = int(courte_rep["id"]),
-                                               rep =courte_rep["rep"],user = user  )
-        for check in data["checkboxAnswers"]:
-                 resp = Reponse.objects.create(question_id = int(check["id"]),
-                                               rep =check["rep"],user = user  )
-        for rad in data["radioAnswers"]:
-                 resp = Reponse.objects.create(question_id = int(rad["id"]),
-                                               rep =rad["rep"],user = user  )
-                 
-        return Response({"message":"Done!"})
-    
-class SaveForm(APIView):
-    permission_classes = (AllowAny,)
-    def post(self, request):
-        user = request.user
-        form_id = request.data["form"]
-        saveform = ReponseUser.objects.create(form_id = form_id,user = user)
-        return Response({"message":"Save done!"})
-@method_decorator(cache_page(10 * 1), name='dispatch')
-class Return_reponses_form(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request):
-        rep = ReponseUser.objects.filter(user=request.user)
-        serializer = ReponseUserSerializer(rep,context={'request': request},many=True)
-        data = serializer.data
-        return Response(data)
-    
-
-@method_decorator(cache_page(10 * 1), name='dispatch')      
-class Return_reponses(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request,u):
-        rep = Reponse.objects.filter(user_id=u)
-        serializer = ReponseSerializer(rep,many=True)
-        data = serializer.data
-        return Response(data)
-@method_decorator(cache_page(10 * 1), name='dispatch')   
-class Return_reponses_formbyid(APIView):
-    permission_classes = (AllowAny,)
-    def get(self, request,f):
-        rep = ReponseUser.objects.filter(user=request.user,form_id = f)
-        serializer = ReponseUserSerializer(rep,context={'request': request},many=True)
-        data = serializer.data
-        return Response(data)
-    
 @method_decorator(cache_page(10 * 1), name='dispatch')
 class ListeUsers(APIView):
     permission_classes = (AllowAny,)
@@ -258,34 +72,6 @@ class ListeUsers(APIView):
         data = serializer.data
         return Response(data)
 
-
-@csrf_exempt
-def check_or_register_device(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            fingerprint = data.get('device_id')
-            uuid_client = data.get('device_uuid')
-
-            if not fingerprint:
-                return JsonResponse({'allowed': False, 'reason': 'Missing fingerprint'}, status=400)
-
-            device = AuthorizedDevice.objects.filter(device_id=fingerprint).first()
-
-            if device:
-                if str(device.device_uuid) == uuid_client:
-                    return JsonResponse({'allowed': True})
-                else:
-                    return JsonResponse({'allowed': False, 'reason': 'UUID mismatch'})
-            else:
-                # Autoriser l’enregistrement automatique d’un nouveau device (option à sécuriser)
-                new_uuid = str(uuid.uuid4())
-                AuthorizedDevice.objects.create(device_id=fingerprint, device_uuid=new_uuid)
-                return JsonResponse({'allowed': True, 'new_uuid': new_uuid})
-
-        except Exception as e:
-            return JsonResponse({'allowed': False, 'reason': str(e)}, status=500)
-        
 class RegisterTerminalView(APIView):
     def post(self, request):
         serializer = TerminalSerializer(data=request.data)
@@ -309,3 +95,75 @@ def check_device(request):
     fingerprint = request.GET.get('fingerprint')
     allowed = Terminal.objects.filter(fingerprint=fingerprint).exists()
     return Response({'allowed': allowed})
+
+
+class FormulaireCreateAPIView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+    queryset = Formulaire.objects.all()
+    serializer_class = FormulaireWriteSerializer
+
+@method_decorator(cache_page(10 * 1), name='dispatch')
+class FormulaireListAPIView(generics.ListAPIView):
+    permission_classes = (AllowAny,)
+    queryset = Formulaire.objects.all().order_by('-date_creation')
+    serializer_class = FormulaireReadSerializer
+@method_decorator(cache_page(10 * 1), name='dispatch')
+class FormulaireDetailAPIView(generics.RetrieveAPIView):
+    permission_classes = (AllowAny,)
+    queryset = Formulaire.objects.all()
+    serializer_class = FormulaireReadSerializer
+    lookup_field = 'pk'
+
+class ReponseFormulaireCreateAPIView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        user = request.user
+        data = request.data
+
+        try:
+            formulaire_id = data.get("formulaire")
+            reponses_data = data.get("reponses", [])
+            formulaire = Formulaire.objects.get(id=formulaire_id)
+
+            # Création de l'objet ReponseFormulaire (réponse globale d'un utilisateur à un formulaire)
+            reponse_formulaire = ReponseFormulaire.objects.create(
+                formulaire=formulaire,
+                user=user
+            )
+
+            for item in reponses_data:
+                question_id = item.get("question")
+                valeur = item.get("valeur")
+
+                question = Question.objects.get(id=question_id)
+
+                # Création de la réponse à une question
+                ReponseQuestion.objects.create(
+                    reponse_formulaire=reponse_formulaire,
+                    question=question,
+                    valeur=valeur  # valeur est un champ JSONField
+                )
+
+            return Response({"message": "Réponses enregistrées avec succès"}, status=status.HTTP_201_CREATED)
+
+        except Formulaire.DoesNotExist:
+            return Response({"error": "Formulaire introuvable"}, status=status.HTTP_400_BAD_REQUEST)
+        except Question.DoesNotExist:
+            return Response({"error": "Question introuvable"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@method_decorator(cache_page(10 * 1), name='dispatch')   
+class ReponseDetailAPIView(APIView):
+    permission_classes = (AllowAny,)
+    def get(self, request, pk):
+        instance = get_object_or_404(ReponseFormulaire, pk=pk)
+        serializer = ReponseFormulaireDetailSerializer(instance)
+        return Response(serializer.data)
+    
+@method_decorator(cache_page(10 * 1), name='dispatch')
+class ReponseListeAPIView(generics.ListAPIView):
+    permission_classes = (AllowAny,)
+    queryset = ReponseFormulaire.objects.all().order_by('-date_creation')
+    serializer_class = ReponseFormulaireDetailSerializer

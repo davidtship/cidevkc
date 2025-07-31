@@ -144,6 +144,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
 
     ),
+     'EXCEPTION_HANDLER': 'quiz.exceptions.custom_exception_handler'
 }
 
 SIMPLE_JWT = {

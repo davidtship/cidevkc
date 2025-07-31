@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
 import uuid
+from django.contrib.auth import get_user_model
+
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -20,6 +23,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('username', email)  # éviter l'erreur de username
+        extra_fields.setdefault('type_user', 'super_admin')
 
         return self.create_user(email, password, **extra_fields)
 
@@ -34,14 +38,8 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.emailcl
-    
+        return self.email
 
-class BaseModel(models.Model):
-    created_at = models.DateField(auto_now_add=True)
-    created_at = models.DateField(auto_now=True)
-    class Meta:
-        abstract = True
 class Terminal(models.Model):
     device_uuid = models.CharField(max_length=255, unique=True)
     fingerprint = models.CharField(max_length=255)
@@ -51,51 +49,50 @@ class Terminal(models.Model):
     def __str__(self):
         return self.device_name
     
-class Choices(BaseModel):
-    option = models.CharField(max_length=100)
-    code_uid = models.CharField(max_length=100,blank=True)
-    def __str__(self):
-        return self.option
 
-class Question(BaseModel):
-    code_uid = models.CharField(max_length=100,blank=True)
-    label = models.CharField(max_length=100)
-    question_type = models.CharField(max_length=100)
-    required = models.BooleanField(default=True)
-    choices = models.ManyToManyField(Choices, related_name="question_choices",blank=True)
+
+class Formulaire(models.Model):
+    titre = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='formulaires')
+    date_creation = models.DateTimeField(auto_now_add=True)
+    etat = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.label
-    
-class Categorie(BaseModel):
-    cat_form = models.CharField(max_length=100,blank=True)
-    code_uid = models.CharField(max_length=100,blank=True)
-    title = models.CharField(max_length=100,blank=True)
-    questions = models.ManyToManyField(Question,related_name="questions")
+        return self.titre
+
+
+class Section(models.Model):
+    formulaire = models.ForeignKey(Formulaire, on_delete=models.CASCADE, related_name='sections')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='sous_sections')
+    titre = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.title
-    
-class Form(BaseModel):
-    title = models.CharField(max_length=255)
-    categories = models.ManyToManyField(Categorie,related_name="categories")
-    statut = models.BooleanField(default=False)
+        return self.titre
+
+
+class Question(models.Model):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='questions')
+    texte = models.TextField()
+    type = models.CharField(max_length=100)  # Exemple : 'text', 'paragraph', 'multiple_choice'
 
     def __str__(self):
-        return self.title
-    
-    @property
-    def lien(self):
-        return "http://localhost:5173/formulaire/"+str(self.id)
-
-class Reponse(BaseModel):
-    question = models.ForeignKey(Question, on_delete=models.DO_NOTHING, null=False)
-    rep = models.CharField( max_length=150,blank=True,default="")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    
-class ReponseUser(BaseModel):
-    form = models.ForeignKey(Form, on_delete=models.DO_NOTHING, null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+        return self.texte
 
 
+class Option(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
+    texte = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.texte
+
+
+class ReponseFormulaire(models.Model):
+    formulaire = models.ForeignKey(Formulaire, on_delete=models.CASCADE, related_name='reponses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reponses')  # 👈
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+class ReponseQuestion(models.Model):
+    reponse_formulaire = models.ForeignKey(ReponseFormulaire, on_delete=models.CASCADE, related_name='reponses')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    valeur = models.JSONField()
