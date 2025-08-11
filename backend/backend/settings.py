@@ -169,3 +169,8 @@ CACHES = {
         'LOCATION': 'unique-snowflake',
     }
 }
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'quiz.auth_backends.EmailOrUsernameBackend',
+]
