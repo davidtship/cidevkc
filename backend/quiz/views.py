@@ -30,14 +30,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
+        username = request.data.get('username')
         password = request.data.get('password')
+        email = request.data.get('email')
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(username=username,email=email)
         except User.DoesNotExist:
             return Response({'error': '18'}, status=status.HTTP_200_OK)  # utilisateur non trouvé
-
         if not user.check_password(password):
             return Response({'error': '19'}, status=status.HTTP_200_OK)  # mot de passe invalide
 

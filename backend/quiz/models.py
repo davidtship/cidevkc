@@ -7,34 +7,34 @@ from django.contrib.auth.models import AbstractUser,BaseUserManager
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email requis')
-        email = self.normalize_email(email)
-        extra_fields.setdefault('username', email)  # pour que AbstractUser soit content
-        user = self.model(email=email, **extra_fields)
+    use_in_migrations = True
+
+    def create_user(self, username, email=None, password=None, **extra_fields):
+        if not username:
+            raise ValueError('Le username est requis')
+        email = self.normalize_email(email) if email else None
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('username', email)  # éviter l'erreur de username
         extra_fields.setdefault('type_user', 'super_admin')
-
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, email, password, **extra_fields)
 
 class User(AbstractUser):
-    email = models.EmailField(unique=False)
-    type_user = models.CharField(max_length=100)
-    username = models.CharField(max_length=150, blank=True,unique=False)  # facultatif ou supprimé
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    email = models.EmailField(unique=False, blank=True, null=True)  # email non unique
+    type_user = models.CharField(max_length=100, blank=True, null=True)
+
+    USERNAME_FIELD = 'username'  # login avec username
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']  # email n'est plus unique mais on le demande à la création
+
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
 
 class Terminal(models.Model):
     device_uuid = models.CharField(max_length=255, unique=True)
